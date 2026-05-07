@@ -36,15 +36,39 @@ public class RagdollController : MonoBehaviour
         }
     }
 
+    // Yandan gelen çarpýþmalarý (Triggerlarý) yakalamak için
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Obstacle"))
+        {
+            // Yandan çarpmalarda engelin bize vurma yönünü (sahte normal) manuel hesaplýyoruz
+            Vector3 fakeNormal = (transform.position - other.transform.position).normalized;
+
+            // Havaya doðru sekmesi için Y eksenini biraz yukarý kaldýrýyoruz
+            fakeNormal.y = 0.5f;
+
+            Die(fakeNormal.normalized);
+        }
+    }
+
     // Die metoduna artýk engelin bizi ne tarafa ittiði bilgisini (impactNormal) veriyoruz
     public void Die(Vector3 impactNormal)
     {
         SetRagdollState(true);
 
-        // Karakterin hareket okumasýný durdur
+        // 1. Engellerin okuduðu son tuþ girdilerini (basýlý kalan tuþlarý) zorla SIFIRLA
         if (_input != null)
         {
             _input.isMovementStarted = false;
+            _input.rawInput = Vector2.zero; // <--- Engellerin hareketini anýnda keser
+            _input.move = Vector2.zero;
+        }
+
+        // 2. Oyuncunun klavye/mouse baðlantýsýný tamamen KES (Sanal olarak fiþi çekiyoruz)
+        UnityEngine.InputSystem.PlayerInput playerInputComponent = GetComponent<UnityEngine.InputSystem.PlayerInput>();
+        if (playerInputComponent != null)
+        {
+            playerInputComponent.enabled = false;
         }
 
         // Doðal fizik hesaplamasý

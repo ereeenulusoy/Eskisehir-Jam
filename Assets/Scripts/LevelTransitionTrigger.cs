@@ -8,18 +8,18 @@ public class LevelTransitionTrigger : MonoBehaviour
     public int switchToLevel = 3;
     public bool newCanJump;
     public bool newCanControlCharacterHorizontal;
-    public bool newIsCameraInverted;
+    public bool newIsCameraInverted; // Eski tekli güvenilir þalterimiz
     public bool newCanUseShiftToSlowDown;
-
-    // YENÝ KURALIMIZ EKLENDÝ
     public bool newIsMarioMode;
+    public bool newCanControlObstacles;
 
     [Header("Kamera Kontrolü")]
-    [Tooltip("Bu bölüme geçince aktif olacak kamera")]
     public CinemachineVirtualCamera targetCamera;
-
-    [Tooltip("Bu kameranýn öncelik gücü. Bir önceki leveldan DAHA YÜKSEK olmalý.")]
     public int cameraPriority = 20;
+
+    [Header("Drone Kontrolü")]
+    [Tooltip("Bu trigger'a girildiðinde uyanacak Drone (Boþ obje)")]
+    public GameObject droneToActivate; // YENÝ EKLENDÝ
 
     private void OnTriggerEnter(Collider other)
     {
@@ -28,21 +28,18 @@ public class LevelTransitionTrigger : MonoBehaviour
             StarterAssetsInputs input = other.GetComponent<StarterAssetsInputs>();
             if (input != null)
             {
-                // Kurallarý uygula
                 input.currentActiveLevel = switchToLevel;
                 input.canJump = newCanJump;
                 input.canControlCharacterHorizontal = newCanControlCharacterHorizontal;
                 input.isCameraInverted = newIsCameraInverted;
                 input.canUseShiftToSlowDown = newCanUseShiftToSlowDown;
-
-                // MARIO MODUNU KARAKTERE ÝLET
                 input.isMarioMode = newIsMarioMode;
+                input.canControlObstacles = newCanControlObstacles;
 
-                // Kamerayý Deðiþtir
-                if (targetCamera != null)
-                {
-                    targetCamera.Priority = cameraPriority;
-                }
+                if (targetCamera != null) targetCamera.Priority = cameraPriority;
+
+                // Drone'u uyandýr!
+                if (droneToActivate != null) droneToActivate.SetActive(true);
 
                 gameObject.SetActive(false);
             }

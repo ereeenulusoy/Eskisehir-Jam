@@ -13,6 +13,9 @@ namespace StarterAssets
         public bool jump;
         public bool sprint;
 
+        [Tooltip("Aktifse A-D tuþlarý engelleri hareket ettirir.")]
+        public bool canControlObstacles = false;
+
         [Header("Parkur Sýnýrlarý")]
         [Tooltip("Normal modda sað/sol sýnýrlarý")]
         public float minX = -4.5f;

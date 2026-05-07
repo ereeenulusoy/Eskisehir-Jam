@@ -14,18 +14,16 @@ public class ObstacleController : MonoBehaviour
     void Update()
     {
         if (playerInput == null) return;
-
-        // --- YENÝ KURAL ---
-        // Eðer oyun Mario (2.5D) modundaysa engeller KESÝNLÝKLE hareket etmez!
         if (playerInput.isMarioMode) return;
-        // ------------------
 
-        if (playerInput.canControlCharacterHorizontal) return;
+        // --- YENÝ KURAL BURADA ---
+        // Eðer engel kontrol þalteri kapalýysa, engeller hiçbir þekilde hareket etmez!
+        if (!playerInput.canControlObstacles) return;
+
         if (myLevel != playerInput.currentActiveLevel) return;
 
         float horizontalDirection = playerInput.rawInput.x;
 
-        // EÐER KAMERA TERSSE A VE D TUÞLARININ YÖNÜNÜ TERSÝNE ÇEVÝR
         if (playerInput.isCameraInverted)
         {
             horizontalDirection *= -1f;

@@ -13,6 +13,11 @@ namespace StarterAssets
         public bool jump;
         public bool sprint;
 
+        [Header("Parkur Sýnýrlarý")]
+        [Tooltip("Normal modda sað/sol sýnýrlarý")]
+        public float minX = -4.5f;
+        public float maxX = 4.5f;
+
         [Header("Movement Settings")]
         public bool analogMovement;
 
@@ -121,21 +126,16 @@ namespace StarterAssets
             sprint = canUseShiftToSlowDown ? newSprintState : false;
         }
 
+   
         private void Update()
         {
             // 1. KURAL: MARIO MODU (2.5D Parkur)
             if (isMarioMode)
             {
-                // Otomatik koþu yok. Sadece A-D (rawInput.x) çalýþýr ve bu Z eksenine (move.y) aktarýlýr.
                 float zMove = rawInput.x;
+                if (isCameraInverted) zMove *= -1f;
 
-                // Eðer kamera ters yönden bakýyorsa sað-sol hissiyatýný düzeltmek için
-                if (isCameraInverted)
-                {
-                    zMove *= -1f;
-                }
-
-                // X ekseninde hareket 0, sadece Z ekseninde (ileri/geri) hareket ediyoruz.
+                // Z sýnýrlarýný kaldýrdýk! Oyuncu Z ekseninde özgür.
                 move = new Vector2(0f, zMove);
             }
             // 2. KURAL: STANDART AUTO-RUN MODU
@@ -144,10 +144,11 @@ namespace StarterAssets
                 float forwardMove = 1f;
                 float horizontalMove = canControlCharacterHorizontal ? rawInput.x : 0f;
 
-                if (isCameraInverted)
-                {
-                    horizontalMove *= -1f;
-                }
+                if (isCameraInverted) horizontalMove *= -1f;
+
+                // --- NORMAL MOD SINIR KONTROLÜ (X Ekseni hala korunuyor) ---
+                if (transform.position.x <= minX && horizontalMove < 0) horizontalMove = 0f;
+                if (transform.position.x >= maxX && horizontalMove > 0) horizontalMove = 0f;
 
                 move = new Vector2(horizontalMove, forwardMove);
             }
@@ -157,6 +158,7 @@ namespace StarterAssets
                 move = Vector2.zero;
             }
         }
+        
 
         private void OnApplicationFocus(bool hasFocus)
         {

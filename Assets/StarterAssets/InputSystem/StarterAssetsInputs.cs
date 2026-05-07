@@ -20,6 +20,9 @@ namespace StarterAssets
         public bool cursorLocked = true;
         public bool cursorInputForLook = true;
 
+        [Tooltip("Aktifse karakter otomatik koþmaz. A-D tuþlarý karakteri Z ekseninde ileri-geri yürütür (2.5D Platformer).")]
+        public bool isMarioMode = false;
+
         // --- GAME JAM KURALLARI ---
         [Header("No Rules Settings")]
         [Tooltip("Karakter otomatik olarak hep ileri koþar.")]
@@ -120,17 +123,27 @@ namespace StarterAssets
 
         private void Update()
         {
-            // Hareket tetiklendiyse auto-run mantýðýný çalýþtýr
-            if (isAutoRunning && isMovementStarted)
+            // 1. KURAL: MARIO MODU (2.5D Parkur)
+            if (isMarioMode)
             {
-                // KURAL: Karakter artýk kameradan baðýmsýz olduðu için DAÝMA ileri (+1) koþmalý.
-                float forwardMove = 1f;
+                // Otomatik koþu yok. Sadece A-D (rawInput.x) çalýþýr ve bu Z eksenine (move.y) aktarýlýr.
+                float zMove = rawInput.x;
 
-                // X eksenini kurala göre yönet
+                // Eðer kamera ters yönden bakýyorsa sað-sol hissiyatýný düzeltmek için
+                if (isCameraInverted)
+                {
+                    zMove *= -1f;
+                }
+
+                // X ekseninde hareket 0, sadece Z ekseninde (ileri/geri) hareket ediyoruz.
+                move = new Vector2(0f, zMove);
+            }
+            // 2. KURAL: STANDART AUTO-RUN MODU
+            else if (isAutoRunning && isMovementStarted)
+            {
+                float forwardMove = 1f;
                 float horizontalMove = canControlCharacterHorizontal ? rawInput.x : 0f;
 
-                // EÐER KAMERA TERSSE: Oyuncu A'ya (ekranda sol) bastýðýnda, 
-                // dünyanýn +X'ine (ekranda sað gibi algýlanýr) gitmesi için X girdisini tersine çevir.
                 if (isCameraInverted)
                 {
                     horizontalMove *= -1f;
@@ -138,9 +151,9 @@ namespace StarterAssets
 
                 move = new Vector2(horizontalMove, forwardMove);
             }
+            // 3. KURAL: BEKLEME MODU
             else if (isAutoRunning && !isMovementStarted)
             {
-                // Hareket henüz baþlamadýysa karakteri Idle'da beklet
                 move = Vector2.zero;
             }
         }

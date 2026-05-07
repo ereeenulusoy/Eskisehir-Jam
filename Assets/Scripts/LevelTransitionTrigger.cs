@@ -11,12 +11,15 @@ public class LevelTransitionTrigger : MonoBehaviour
     public bool newIsCameraInverted;
     public bool newCanUseShiftToSlowDown;
 
+    // YENÝ KURALIMIZ EKLENDÝ
+    public bool newIsMarioMode;
+
     [Header("Kamera Kontrolü")]
     [Tooltip("Bu bölüme geçince aktif olacak kamera")]
     public CinemachineVirtualCamera targetCamera;
 
     [Tooltip("Bu kameranýn öncelik gücü. Bir önceki leveldan DAHA YÜKSEK olmalý.")]
-    public int cameraPriority = 20; // <--- YENÝ EKLENDÝ
+    public int cameraPriority = 20;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -32,10 +35,12 @@ public class LevelTransitionTrigger : MonoBehaviour
                 input.isCameraInverted = newIsCameraInverted;
                 input.canUseShiftToSlowDown = newCanUseShiftToSlowDown;
 
+                // MARIO MODUNU KARAKTERE ÝLET
+                input.isMarioMode = newIsMarioMode;
+
                 // Kamerayý Deðiþtir
                 if (targetCamera != null)
                 {
-                    // Artýk önceliði Inspector'dan belirlediðimiz sayýya çekiyoruz
                     targetCamera.Priority = cameraPriority;
                 }
 

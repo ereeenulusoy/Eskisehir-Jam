@@ -14,6 +14,12 @@ public class ObstacleController : MonoBehaviour
     void Update()
     {
         if (playerInput == null) return;
+
+        // --- YENÝ KURAL ---
+        // Eðer oyun Mario (2.5D) modundaysa engeller KESÝNLÝKLE hareket etmez!
+        if (playerInput.isMarioMode) return;
+        // ------------------
+
         if (playerInput.canControlCharacterHorizontal) return;
         if (myLevel != playerInput.currentActiveLevel) return;
 

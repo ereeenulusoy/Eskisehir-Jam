@@ -64,6 +64,12 @@ public class RagdollController : MonoBehaviour
             _input.move = Vector2.zero;
         }
 
+        DroneController activeDrone = FindObjectOfType<DroneController>();
+        if (activeDrone != null)
+        {
+            activeDrone.enabled = false;
+        }
+
         // 2. Oyuncunun klavye/mouse baðlantýsýný tamamen KES (Sanal olarak fiþi çekiyoruz)
         UnityEngine.InputSystem.PlayerInput playerInputComponent = GetComponent<UnityEngine.InputSystem.PlayerInput>();
         if (playerInputComponent != null)

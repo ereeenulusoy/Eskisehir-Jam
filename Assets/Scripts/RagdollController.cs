@@ -1,8 +1,14 @@
 using UnityEngine;
 using StarterAssets;
+using UnityEngine.SceneManagement; // Sahne yenileme iþlemleri için eklendi
 
 public class RagdollController : MonoBehaviour
 {
+    // --- CHECKPOINT HAFIZASI (Static: Sahne yenilense bile veriler silinmez) ---
+    public static Vector3 lastCheckpointPosition;
+    public static bool hasCheckpoint = false;
+    // --------------------------------------------------------------------------
+
     private Animator _animator;
     private CharacterController _characterController;
     private ThirdPersonController _tpController;
@@ -23,6 +29,19 @@ public class RagdollController : MonoBehaviour
 
         // Oyun baþlarken Ragdoll'u kapalý tut
         SetRagdollState(false);
+
+        // --- CHECKPOINT KONTROLÜ ---
+        // Eðer oyuncu daha önce bir checkpoint aldýysa ve sahne yeniden yüklendiyse
+        if (hasCheckpoint)
+        {
+            // CharacterController açýkken Unity transform.position ile ýþýnlamaya izin vermez.
+            // Bu yüzden önce kapatýp, ýþýnlayýp, sonra tekrar açýyoruz.
+            _characterController.enabled = false;
+            transform.position = lastCheckpointPosition;
+            _characterController.enabled = true;
+
+            Debug.Log("Karakter Checkpoint noktasýnda doðdu: " + lastCheckpointPosition);
+        }
     }
 
     // Karakter KATIK BÝR CÝSME fiziksel olarak çarptýðýnda Unity bu metodu çaðýrýr
@@ -36,7 +55,7 @@ public class RagdollController : MonoBehaviour
         }
     }
 
-    // Yandan gelen çarpýþmalarý (Triggerlarý) yakalamak için
+    // Yandan gelen çarpýþmalarý (Görünmez Triggerlarý) yakalamak için
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Obstacle"))
@@ -51,7 +70,7 @@ public class RagdollController : MonoBehaviour
         }
     }
 
-    // Die metoduna artýk engelin bizi ne tarafa ittiði bilgisini (impactNormal) veriyoruz
+    // Ölüm ve Ragdoll tetikleyicisi
     public void Die(Vector3 impactNormal)
     {
         SetRagdollState(true);
@@ -60,14 +79,8 @@ public class RagdollController : MonoBehaviour
         if (_input != null)
         {
             _input.isMovementStarted = false;
-            _input.rawInput = Vector2.zero; // <--- Engellerin hareketini anýnda keser
+            _input.rawInput = Vector2.zero; // Engellerin hareketini anýnda keser
             _input.move = Vector2.zero;
-        }
-
-        DroneController activeDrone = FindObjectOfType<DroneController>();
-        if (activeDrone != null)
-        {
-            activeDrone.enabled = false;
         }
 
         // 2. Oyuncunun klavye/mouse baðlantýsýný tamamen KES (Sanal olarak fiþi çekiyoruz)
@@ -77,18 +90,38 @@ public class RagdollController : MonoBehaviour
             playerInputComponent.enabled = false;
         }
 
-        // Doðal fizik hesaplamasý
+        // 3. EÐER SAHNEDE UÇAN BÝR DRONE VARSA MOTORUNU ANINDA DURDUR!
+        DroneController activeDrone = FindObjectOfType<DroneController>();
+        if (activeDrone != null)
+        {
+            activeDrone.enabled = false;
+        }
+
+        // 4. Doðal fizik hesaplamasý (Çarpma Hissiyatý)
         foreach (Rigidbody rb in _boneRigidbodies)
         {
-            // 1. Karakterin koþudan gelen kendi ileri ivmesi (biraz azaltýlmýþ hali)
+            // Karakterin koþudan gelen kendi ileri ivmesi (biraz azaltýlmýþ hali)
             Vector3 runMomentum = transform.forward * 4f;
 
-            // 2. Senin bahsettiðin o doðal "pulse" - engelden karaktere doðru seken güç
+            // Engelden karaktere doðru seken güç (Pulse)
             Vector3 bouncePulse = impactNormal * 6f;
 
             // Ýkisini birleþtirip kemiklere anlýk güç (Impulse) olarak uyguluyoruz
             rb.AddForce(runMomentum + bouncePulse, ForceMode.Impulse);
         }
+
+        // 5. Ölüm animasyonunu izletip sahneyi yenilemek için sayacý baþlat
+        StartCoroutine(RestartSceneRoutine());
+    }
+
+    // Sahne yenileme sayacý
+    private System.Collections.IEnumerator RestartSceneRoutine()
+    {
+        // Oyuncuya karakterinin yere yapýþmasýný izlemesi için 2.5 saniye ver
+        yield return new WaitForSeconds(2f);
+
+        // Mevcut sahneyi en baþtan yükle (Tüm kýrýlan/düþen engeller, dronlar, þiþeler sýfýrlanýr)
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private void SetRagdollState(bool isRagdollActive)
@@ -104,7 +137,7 @@ public class RagdollController : MonoBehaviour
             // Kendi ana objemizde bir Rigidbody varsa onu atla
             if (rb.gameObject == gameObject) continue;
 
-            // Ragdoll aktifse Kinematic kapanýr (fizik motoru devralýr)
+            // Ragdoll aktifse Kinematic kapanýr (fizik motoru devralýr), kapalýysa Kinematic açýlýr
             rb.isKinematic = !isRagdollActive;
         }
     }
